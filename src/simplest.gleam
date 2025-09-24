@@ -1,76 +1,26 @@
-import gleam/dict.{type Dict}
-import gleam/dynamic/decode
+import gleam/dict
 import gleam/int
 import gleam/json
 import gleam/list
 import gleam/result
-import gleam/string
 
-import lustre/attribute
-import lustre/element
-import lustre/event.{on_click}
-
+import plinth/javascript/console
 import plinth/javascript/storage
 import varasto
 
 import lustre
+import lustre/attribute
+import lustre/element
 import lustre/element/html.{div, hr, li, section, ul}
+import lustre/event.{on_click}
 
-import plinth/javascript/console
+import simplest/task.{
+  type Task, type Tasks, Task, Tasks, tasks_decoder, tasks_to_json,
+}
 
 const key = "net.bucsi.simplest.tasks"
 
 const localstorage_set_failure = "LocalStorage.set failed!"
-
-pub type Task {
-  Task(id: Int, description: String)
-}
-
-fn task_to_json(task: Task) -> json.Json {
-  let Task(id:, description:) = task
-  json.object([
-    #("id", json.int(id)),
-    #("description", json.string(description)),
-  ])
-}
-
-fn task_decoder() -> decode.Decoder(Task) {
-  use id <- decode.field("id", decode.int)
-  use description <- decode.field("description", decode.string)
-  decode.success(Task(id:, description:))
-}
-
-pub type Tasks {
-  Tasks(do: Dict(Int, Task), done: Dict(Int, Task))
-}
-
-fn tasks_to_json(tasks: Tasks) -> json.Json {
-  let Tasks(do:, done:) = tasks
-  json.object([
-    #("do", json.dict(do, int.to_string, task_to_json)),
-    #("done", json.dict(done, int.to_string, task_to_json)),
-  ])
-}
-
-fn tasks_decoder() -> decode.Decoder(Tasks) {
-  use do <- decode.field(
-    "do",
-    decode.dict(string_to_int_decoder(), task_decoder()),
-  )
-  use done <- decode.field(
-    "done",
-    decode.dict(string_to_int_decoder(), task_decoder()),
-  )
-  decode.success(Tasks(do:, done:))
-}
-
-fn string_to_int_decoder() -> decode.Decoder(Int) {
-  use value <- decode.then(decode.string)
-  case int.parse(value) {
-    Ok(v) -> decode.success(v)
-    Error(_) -> decode.failure(0, "Expected a string representing an Int")
-  }
-}
 
 pub type Message {
   UserClickedDoTask(id: Int)
