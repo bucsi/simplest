@@ -13,7 +13,7 @@ import lustre
 import lustre/attribute
 import lustre/element
 import lustre/element/html.{div, hr, input, li, section, ul}
-import lustre/event.{on_click}
+import lustre/event.{on_click, on_keypress}
 
 import simplest/task.{
   type Task, type Tasks, Task, Tasks, tasks_decoder, tasks_to_json,
@@ -28,6 +28,7 @@ pub type Message {
   UserClickedDoneTask(id: Int)
   UserUpdatedCurrentlyEditedTask(currently_edited_task: String)
   UserSavedCurrentlyEditedTask
+  Nothing
 }
 
 pub type NewTaskData {
@@ -78,6 +79,7 @@ fn update(model: Model, msg: Message) -> Model {
     UserUpdatedCurrentlyEditedTask(currently_edited_task:) ->
       Model(..model, currently_edited_task:)
     UserSavedCurrentlyEditedTask -> add_task(model)
+    Nothing -> model
   }
 }
 
@@ -128,9 +130,15 @@ fn view(model: Model) {
     section([], [
       div([attribute.role("group")], [
         input([
-        attribute.value(model.currently_edited_task),
-        event.on_input(UserUpdatedCurrentlyEditedTask),
-      ]),
+          attribute.value(model.currently_edited_task),
+          on_keypress(fn(key) {
+            case key {
+              "Enter" -> UserSavedCurrentlyEditedTask
+              _ -> Nothing
+            }
+          }),
+          event.on_input(UserUpdatedCurrentlyEditedTask),
+        ]),
         input([
           on_click(UserSavedCurrentlyEditedTask),
           attribute.type_("button"),
