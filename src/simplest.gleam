@@ -163,5 +163,7 @@ fn do_task_to_li(task: Task) -> element.Element(Message) {
 fn done_task_to_li(task: Task) -> element.Element(Message) {
   let Task(id:, description:) = task
 
-  li([on_click(UserClickedDoneTask(id))], [html.text(description)])
+  li([on_click(UserClickedDoneTask(id))], [
+    html.del([], [html.text(description)]),
+  ])
 }
