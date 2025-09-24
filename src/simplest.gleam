@@ -99,29 +99,20 @@ fn init(_flags: a) -> Model {
   let typed_storage = varasto.new(local, tasks_decoder(), tasks_to_json)
 
   let save = fn(value: Tasks) -> Tasks {
-    echo "called save"
     case varasto.set(typed_storage, key, value) {
-      Ok(_) -> {
-        echo "Saved tasks to localStorage"
-        echo value
-      }
+      Ok(_) -> value
       Error(_) -> {
         console.error(localstorage_set_failure)
+        console.log(value |> tasks_to_json |> json.to_string)
         panic as localstorage_set_failure
       }
     }
   }
 
   let tasks = case typed_storage |> varasto.get(key) {
-    Ok(value) -> {
-      console.debug(
-        "Loaded tasks from localStorage: " <> value |> string.inspect,
-      )
-      echo value
-    }
-    Error(a) -> {
-      echo a
-      echo "localStorage key not found, starting fresh"
+    Ok(value) -> value
+    Error(_) -> {
+      console.debug("No saved tasks found, starting fresh.")
       save(Tasks(dict.new(), dict.new()))
     }
   }
