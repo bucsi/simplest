@@ -12,7 +12,7 @@ import varasto
 import lustre
 import lustre/attribute
 import lustre/element
-import lustre/element/html.{div, hr, li, section, ul}
+import lustre/element/html.{div, hr, input, li, section, ul}
 import lustre/event.{on_click}
 
 import simplest/task.{
@@ -126,16 +126,17 @@ fn view(model: Model) {
   let Tasks(do:, done:) = model.tasks
   div([], [
     section([], [
-      html.input([
+      div([attribute.role("group")], [
+        input([
         attribute.value(model.currently_edited_task),
         event.on_input(UserUpdatedCurrentlyEditedTask),
       ]),
-      html.button(
-        [
+        input([
           on_click(UserSavedCurrentlyEditedTask),
-        ],
-        [html.text("Add task")],
-      ),
+          attribute.type_("button"),
+          attribute.value("Add Task"),
+        ]),
+      ]),
       ul([], list.map(dict.values(do), do_task_to_li)),
     ]),
     hr([]),
