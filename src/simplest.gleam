@@ -54,7 +54,10 @@ fn tasks_decoder() -> decode.Decoder(Tasks) {
   decode.success(Tasks(do:, done:))
 }
 
-pub type Message
+pub type Message {
+  UserClickedDoTask(id: String)
+  UserClickedDoneTask(id: String)
+}
 
 pub type Model {
   Model(
@@ -95,24 +98,57 @@ fn init(_flags: a) -> Model {
 }
 
 fn update(model: Model, msg: Message) -> Model {
-  todo as "update function not implemented"
+  case msg {
+    UserClickedDoTask(id:) -> move_do_task_to_done(model, id)
+    UserClickedDoneTask(id:) -> move_done_task_to_do(model, id)
+  }
+}
+
+fn move_done_task_to_do(model: Model, id: String) -> Model {
+  console.log("move_done_task_to_do: " <> id)
+  let Tasks(do:, done:) = model.tasks
+
+  let assert Ok(task) = done |> dict.get(id)
+  let do = do |> dict.insert(id, task)
+  let done = done |> dict.delete(id)
+  let tasks = Tasks(do:, done:) |> model.save
+
+  Model(..model, tasks:)
+}
+
+fn move_do_task_to_done(model: Model, id: String) -> Model {
+  console.log("move_do_task_to_done: " <> id)
+  let Tasks(do:, done:) = model.tasks
+
+  let assert Ok(task) = do |> dict.get(id)
+  let done = done |> dict.insert(id, task)
+  let do = do |> dict.delete(id)
+  let tasks = Tasks(do:, done:) |> model.save
+
+  Model(..model, tasks:)
 }
 
 fn view(model: Model) {
   let Tasks(do:, done:) = model.tasks
   div([], [
-    section([], [ul([], tasks_to_lis(do))]),
+    section([], [
+      ul([], list.map(dict.values(do), do_task_to_li)),
+    ]),
     hr([]),
     section([], [
-      ul([], tasks_to_lis(done)),
+      ul([], list.map(dict.values(done), done_task_to_li)),
     ]),
   ])
 }
 
-fn tasks_to_lis(tasks: Dict(String, Task)) -> List(element.Element(msg)) {
-  use task <- list.map(dict.values(tasks))
-
+fn do_task_to_li(task: Task) -> element.Element(Message) {
   let Task(id:, description:) = task
 
-  li([attribute.data("simplest-task-id", id)], [html.text(description)])
+  li([on_click(UserClickedDoTask(id))], [html.text(description)])
+}
+
+fn done_task_to_li(task: Task) -> element.Element(Message) {
+  let Task(id:, description:) = task
+
+  li([on_click(UserClickedDoneTask(id))], [html.text(description)])
 }
