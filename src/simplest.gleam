@@ -1,3 +1,4 @@
+import gleam/bool
 import gleam/dict
 import gleam/int
 import gleam/json
@@ -103,6 +104,8 @@ fn move_do_task_to_done(model: Model, id: Int) -> Model {
 }
 
 fn add_task(model: Model) -> Model {
+  use <- bool.guard(when: model.currently_edited_task == "", return: model)
+
   let Tasks(do:, done:) = model.tasks
 
   let id =
